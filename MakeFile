@@ -1,0 +1,34 @@
+.PHONY: setup scan sarif test docker-up docker-down clean help
+
+help:
+	@echo "Cloud Sentinel Management Commands:"
+	@echo "  make setup        Install Python dependencies"
+	@echo "  make scan         Run static IaC security scan"
+	@echo "  make sarif        Run scan and generate report.sarif"
+	@echo "  make test         Run Pytest integration test suite"
+	@echo "  make docker-up    Start LocalStack container"
+	@echo "  make docker-down  Stop LocalStack container"
+
+setup:
+	pip install --upgrade pip
+	pip install -r requirements.txt
+
+scan:
+	python scanner/main.py --dir iac/vulnerable
+
+sarif:
+	python scanner/main.py --dir iac/vulnerable --sarif report.sarif
+
+test:
+	pytest tests/test_remediator.py -v -s
+
+docker-up:
+	cd docker && docker-compose up -d
+
+docker-down:
+	cd docker && docker-compose down
+
+clean:
+	rm -f report.sarif
+	rm -rf .pytest_cache
+	rm -rf __pycache__

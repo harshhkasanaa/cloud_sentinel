@@ -1,0 +1,53 @@
+name: "Cloud Sentinel IaC Guardrail"
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+  security-events: write  # Required for uploading SARIF reports to GitHub Security tab
+
+jobs:
+  iac-security-scan:
+    name: "Static IaC Security Scan"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Cloud Sentinel Static Scanner
+        id: sentinel_scan
+        continue-on-error: true  # Allow workflow to proceed to SARIF upload even if vulnerabilities cause exit 1
+        run: |
+          python scanner/main.py --dir iac/vulnerable --sarif report.sarif
+
+      - name: Upload SARIF Security Findings to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()  # Always upload report even if scanner detected security failures
+        with:
+          sarif_file: report.sarif
+          category: "cloud-sentinel-iac"
+
+      - name: Enforce CI/CD Security Gate
+        run: |
+          if [ "${{ steps.sentinel_scan.outcome }}" == "failure" ]; then
+            echo "❌ CRITICAL: Security vulnerabilities detected in IaC templates. Deployment blocked."
+            exit 1
+          else
+            echo "✅ PASS: IaC Security Scan passed successfully."
+          fi

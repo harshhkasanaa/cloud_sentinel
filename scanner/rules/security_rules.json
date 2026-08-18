@@ -1,0 +1,36 @@
+[
+  {
+    "id": "CS-AWS-001",
+    "name": "Unrestricted SSH Access",
+    "severity": "CRITICAL",
+    "resource_type": "aws_security_group",
+    "description": "Security group rule allows inbound SSH (Port 22) from 0.0.0.0/0.",
+    "check": {
+      "block": "ingress",
+      "port": 22,
+      "unrestricted_cidr": "0.0.0.0/0"
+    }
+  },
+  {
+    "id": "CS-AWS-002",
+    "name": "Unrestricted RDP Access",
+    "severity": "CRITICAL",
+    "resource_type": "aws_security_group",
+    "description": "Security group rule allows inbound RDP (Port 3389) from 0.0.0.0/0.",
+    "check": {
+      "block": "ingress",
+      "port": 3389,
+      "unrestricted_cidr": "0.0.0.0/0"
+    }
+  },
+  {
+    "id": "CS-AWS-003",
+    "name": "S3 Bucket Missing Public Access Block",
+    "severity": "HIGH",
+    "resource_type": "aws_s3_bucket",
+    "description": "S3 bucket is declared without an associated public access block configuration.",
+    "check": {
+      "require_companion_resource": "aws_s3_bucket_public_access_block"
+    }
+  }
+]

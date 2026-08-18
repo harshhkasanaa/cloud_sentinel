@@ -1,0 +1,14 @@
+# IaC AST Parsing
+python-hcl2==4.3.5
+
+# AWS SDK & Emulation Client
+boto3==1.34.0
+botocore==1.34.0
+
+# Utilities & Alerting
+requests==2.31.0
+pyyaml==6.0.1
+
+# Testing & Quality
+pytest==8.0.0
+pytest-mock==3.12.0

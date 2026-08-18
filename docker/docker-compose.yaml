@@ -1,0 +1,13 @@
+services:
+  localstack:
+    container_name: cloud_sentinel_localstack
+    image: localstack/localstack-pro:latest
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # External services port range
+    environment:
+      - LOCALSTACK_AUTH_TOKEN=ls-CUKE6344-RIGo-sura-6937-LeTEnEqo1d05
+      - SERVICES=s3,iam,events,lambda,cloudtrail,ec2
+      - DEBUG=${DEBUG:-1}
+    volumes:
+      - "./volume:/var/lib/localstack"
