@@ -5,29 +5,7 @@
 ---
 
 ## 📐 Architecture Overview
-
-```mermaid
-flowchart TD
-    subgraph PRE ["1. Pre-Deployment Guardrail (Shift-Left CI/CD)"]
-        Developer["Developer Push / Pull Request"] --> GHA["GitHub Actions CI/CD Pipeline"]
-        GHA --> Scanner["Static Scanner Engine (scanner/main.py)"]
-        Scanner --> HCL["python-hcl2 AST Parser"]
-        HCL --> OPA["OPA Policy Evaluator (Rego)"]
-        OPA --> Gate{"Violations Found?"}
-        Gate -- Yes --> Block["Exit 1: Block Deployment & Export SARIF"]
-        Gate -- No --> Pass["Exit 0: Allow Deployment Pipeline"]
-    end
-
-    subgraph POST ["2. Post-Deployment Runtime Auto-Remediation"]
-        Drift["Console / API Security Drift"] --> Trail["AWS CloudTrail Audit Log"]
-        Trail --> EB["EventBridge Pattern Rule"]
-        EB --> SQS["Amazon SQS Event Queue (Buffer)"]
-        SQS --> Batch["SQS Batch Processor (sqs_processor.py)"]
-        Batch --> Lambda["Serverless Lambda Handler (sg_remediator.py)"]
-        Lambda --> Boto["Boto3 SDK Revocation"]
-        Lambda --> Alert["Slack / Discord Webhook Alert"]
-    end
-```
+!(image-6.png)
 
 ---
 
