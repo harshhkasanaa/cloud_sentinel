@@ -1,0 +1,41 @@
+{
+  "MessageId": "sqs-msg-99887766",
+  "ReceiptHandle": "ReceiptHandleSample998877",
+  "Body": {
+    "version": "0",
+    "id": "12345678-1234-1234-1234-123456789012",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ec2",
+    "account": "123456789012",
+    "time": "2026-08-18T14:30:00Z",
+    "region": "us-east-1",
+    "detail": {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/unauthorized-operator"
+      },
+      "eventName": "AuthorizeSecurityGroupIngress",
+      "eventTime": "2026-08-18T14:30:00Z",
+      "requestParameters": {
+        "groupId": "sg-sqs-test555",
+        "ipPermissions": {
+          "items": [
+            {
+              "ipProtocol": "tcp",
+              "fromPort": 22,
+              "toPort": 22,
+              "ipRanges": {
+                "items": [
+                  {
+                    "cidrIp": "0.0.0.0/0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
