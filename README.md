@@ -128,10 +128,12 @@ cloud-sentinel/
 #### 📸 Screenshot 4: GitHub Actions Workflow Execution
 
 *(Save screenshot from GitHub Actions tab showing the pipeline execution and failed status on vulnerable code)*
+![GitHub Actions tab showing the pipeline execution and failed status on vulnerable code](image-4.png)
 
 #### 📸 Screenshot 5: GitHub Code Scanning Security Dashboard (SARIF Annotations)
 
 *(Save screenshot from GitHub repository Security -> Code scanning tab showing line-by-line SARIF findings)*
+![Code scanning tab showing line-by-line SARIF findings](image-5.png)
 
 ---
 
