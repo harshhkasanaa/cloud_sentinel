@@ -5,7 +5,7 @@
 ---
 
 ## 📐 Architecture Overview
-!(image-6.png)
+![](image-6.png)
 
 ---
 
