@@ -10,10 +10,35 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SecurityGroupRemediator")
 
 
+def log_audit_record(group_id, user_arn, event_time, action):
+    """Writes an immutable audit record to DynamoDB for compliance tracking."""
+    localstack_host = os.environ.get("LOCALSTACK_HOSTNAME", "localhost")
+    endpoint_url = f"http://{localstack_host}:4566" if os.environ.get("USE_LOCALSTACK") == "true" else None
+
+    dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
+    table = dynamodb.Table('CloudSentinelAuditTrail')
+
+    try:
+        table.put_item(
+            Item={
+                'IncidentId': f"INC-{group_id}-{int(os.urandom(2).hex(), 16)}",
+                'Timestamp': event_time,
+                'ResourceId': group_id,
+                'UserARN': user_arn,
+                'ActionTaken': action,
+                'Status': 'AUTO_REMEDIATED'
+            }
+        )
+        logger.info("✅ Audit record persisted to DynamoDB table 'CloudSentinelAuditTrail'.")
+    except Exception as e:
+        logger.warning(f"[-] Could not persist audit log to DynamoDB: {e}")
+
+
 def lambda_handler(event, context):
     """
     AWS Lambda entrypoint triggered by EventBridge on AuthorizeSecurityGroupIngress events.
-    Parses event telemetry, checks for 0.0.0.0/0 on Port 22, and revokes rule via boto3.
+    Parses event telemetry, checks for 0.0.0.0/0 on Port 22, revokes rule via boto3,
+    dispatches notification alerts, and records an audit log to DynamoDB.
     """
     logger.info("Received CloudTrail Audit Event payload via EventBridge.")
 
@@ -22,7 +47,7 @@ def lambda_handler(event, context):
     endpoint_url = f"http://{localstack_host}:4566" if os.environ.get("USE_LOCALSTACK") == "true" else None
 
     ec2_client = boto3.client('ec2', endpoint_url=endpoint_url)
-    
+
     # Extract details from CloudTrail JSON structure
     detail = event.get("detail", {})
     event_name = detail.get("eventName")
@@ -37,7 +62,7 @@ def lambda_handler(event, context):
 
     # Inspect IP permission items inside requestParameters
     ip_permissions = request_params.get("ipPermissions", {}).get("items", [])
-    
+
     remediated = False
     for item in ip_permissions:
         from_port = item.get("fromPort")
@@ -49,7 +74,7 @@ def lambda_handler(event, context):
             cidr_ip = ip_range.get("cidrIp")
             if cidr_ip == "0.0.0.0/0" and (from_port == 22 or to_port == 22):
                 logger.warning(f"🚨 CRITICAL: Insecure SSH rule detected on Security Group {group_id}!")
-                
+
                 # Execute Boto3 SDK call to revoke rule
                 try:
                     ec2_client.revoke_security_group_ingress(
@@ -64,7 +89,15 @@ def lambda_handler(event, context):
                     logger.info(f"✅ SUCCESS: Revoked 0.0.0.0/0 Port 22 ingress rule from {group_id}.")
                     remediated = True
 
-                    # Dispatch alert via Notifier
+                    # 1. Log audit record to DynamoDB
+                    log_audit_record(
+                        group_id=group_id,
+                        user_arn=user_arn,
+                        event_time=event_time,
+                        action="REVOKED_OPEN_SSH_RULE"
+                    )
+
+                    # 2. Dispatch alert via Notifier
                     webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
                     notifier = IncidentNotifier(webhook_url=webhook_url)
                     notifier.send_alert(
